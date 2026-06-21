@@ -1,0 +1,1 @@
+Waiting for UI to render...\nClicking draft...\nIframe loaded. Checking selectedEl bug...\nselectedEl is undefined (should be undefined due to IIFE isolation)\nERROR: Cannot read properties of undefined (reading 'length')

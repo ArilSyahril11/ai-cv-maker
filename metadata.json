@@ -1,0 +1,6 @@
+{
+  "name": "AI CV Maker",
+  "description": "Buat CV profesional dan menarik dengan bantuan AI dan ekspor ke PDF.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

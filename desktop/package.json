@@ -1,0 +1,72 @@
+{
+  "name": "ai-cv-maker-desktop",
+  "version": "1.0.0",
+  "description": "AI CV Maker - Aplikasi desktop untuk membuat CV profesional dengan bantuan AI",
+  "main": "main.js",
+  "author": "Syahril Azhar Ramdhanu <aril.syahril149@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArilSyahril11/ai-cv-maker.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable"
+  },
+  "build": {
+    "publish": [{
+      "provider": "github",
+      "owner": "ArilSyahril11",
+      "repo": "ai-cv-maker"
+    }],
+    "appId": "com.aicvmaker.desktop",
+    "productName": "AI CV Maker",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "gemini.js",
+      "../app/src/main/assets/index.html"
+    ],
+    "extraResources": [
+      {
+        "from": "../app/src/main/assets",
+        "to": "app"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerLanguages": [
+        "id_ID",
+        "en_US"
+      ],
+      "language": "1033"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "electron-updater": "^6.8.9",
+    "png-to-ico": "^2.1.8",
+    "typo-js": "^1.3.2"
+  }
+}
