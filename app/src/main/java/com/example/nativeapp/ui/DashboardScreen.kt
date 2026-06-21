@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -41,7 +42,11 @@ fun DashboardScreen(
     onExportDraft: (com.example.model.CVData) -> Unit
 ) {
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
+    val sharedPrefs = remember { context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE) }
+    var apiKeyInput by remember { mutableStateOf(sharedPrefs.getString("gemini_api_key", "") ?: "") }
 
     Scaffold(
         topBar = {
@@ -52,6 +57,9 @@ fun DashboardScreen(
                     titleContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 actions = {
+                    IconButton(onClick = { showSettingsDialog = true }) {
+                        Icon(Icons.Filled.Settings, contentDescription = "Pengaturan")
+                    }
                     IconButton(onClick = { showAboutDialog = true }) {
                         Icon(Icons.Filled.Info, contentDescription = "Tentang Aplikasi")
                     }
@@ -229,6 +237,47 @@ fun DashboardScreen(
             dismissButton = {
                 TextButton(onClick = { showAboutDialog = false }) {
                     Text("Tutup")
+                }
+            }
+        )
+    }
+
+    if (showSettingsDialog) {
+        AlertDialog(
+            onDismissRequest = { showSettingsDialog = false },
+            title = { Text("Pengaturan API Key", fontWeight = FontWeight.Bold) },
+            text = {
+                Column {
+                    Text("Masukkan kunci API Gemini kustom Anda. Kunci ini akan disimpan di perangkat Anda.", fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = apiKeyInput,
+                        onValueChange = { apiKeyInput = it },
+                        label = { Text("API Key") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        sharedPrefs.edit().putString("gemini_api_key", apiKeyInput.trim()).apply()
+                        showSettingsDialog = false
+                    }
+                ) {
+                    Text("Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        apiKeyInput = ""
+                        sharedPrefs.edit().remove("gemini_api_key").apply()
+                        showSettingsDialog = false
+                    }
+                ) {
+                    Text("Hapus Kunci", color = MaterialTheme.colorScheme.error)
                 }
             }
         )

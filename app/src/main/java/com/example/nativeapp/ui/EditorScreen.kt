@@ -43,8 +43,10 @@ fun EditorScreen(
 ) {
     val scope = rememberCoroutineScope()
     val geminiHelper = remember { GeminiHelper() }
+    val sharedPrefs = remember { context.getSharedPreferences("app_prefs", android.content.Context.MODE_PRIVATE) }
+    val customApiKey = remember { sharedPrefs.getString("gemini_api_key", null) }
     
-    var title by remember { mutableStateOf(draft.title) }
+    var title by remember { mutableStateOf(draft.title.ifEmpty { "Curriculum Vitae" }) }
     var template by remember { mutableStateOf(draft.template) }
     var accentColor by remember { mutableStateOf(draft.accentColor ?: "#06b6d4") }
     var personalData by remember { mutableStateOf(draft.personal) }
@@ -112,7 +114,7 @@ fun EditorScreen(
                             educations.forEach { cvText.append("- ${it.major} at ${it.institution}\n") }
                             cvText.append("Skills: ${skills.joinToString { it.name }}\n")
                             
-                            val result = geminiHelper.analyzeResume(cvText.toString())
+                            val result = geminiHelper.analyzeResume(cvText.toString(), customApiKey)
                             analysisResult = result
                             isAnalyzing = false
                         }
@@ -192,7 +194,7 @@ fun EditorScreen(
                         onPersonalChange = { personalData = it },
                         onAiPolish = { type, text ->
                             scope.launch {
-                                val result = geminiHelper.polishText(type, text)
+                                val result = geminiHelper.polishText(type, text, customApiKey)
                                 if (!result.startsWith("Error")) {
                                     personalData = personalData.copy(summary = result)
                                 }
@@ -204,7 +206,7 @@ fun EditorScreen(
                         onExperiencesChange = { experiences = it },
                         onAiPolish = { id, text ->
                             scope.launch {
-                                val result = geminiHelper.polishText("experience", text)
+                                val result = geminiHelper.polishText("experience", text, customApiKey)
                                 if (!result.startsWith("Error")) {
                                     experiences = experiences.map { 
                                         if(it.id == id) it.copy(description = result) else it 

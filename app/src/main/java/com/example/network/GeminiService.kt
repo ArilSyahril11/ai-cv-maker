@@ -70,10 +70,10 @@ object RetrofitClient {
 }
 
 class GeminiHelper {
-    suspend fun polishText(type: String, originalText: String): String {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+    suspend fun polishText(type: String, originalText: String, customApiKey: String? = null): String {
+        val apiKey = customApiKey?.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY" || apiKey.contains("placeholder", ignoreCase = true)) {
-            return "Error: Kunci API Gemini tidak valid atau belum diatur di Secrets Panel. Silakan konfigurasikan GEMINI_API_KEY di AI Studio."
+            return "Error: Kunci API Gemini tidak valid atau belum diatur. Buat file .env di folder root proyek dengan GEMINI_API_KEY=kunci_anda, atau atur API Key di menu Pengaturan."
         }
 
         val prompt = when (type) {
@@ -119,10 +119,10 @@ class GeminiHelper {
         }
     }
 
-    suspend fun analyzeResume(resumeContent: String): String {
-        val apiKey = BuildConfig.GEMINI_API_KEY
+    suspend fun analyzeResume(resumeContent: String, customApiKey: String? = null): String {
+        val apiKey = customApiKey?.takeIf { it.isNotBlank() } ?: BuildConfig.GEMINI_API_KEY
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY" || apiKey.contains("placeholder", ignoreCase = true)) {
-            return "Error: Kunci API Gemini tidak valid atau belum diatur di Secrets Panel."
+            return "Error: Kunci API Gemini tidak valid atau belum diatur. Buat file .env di folder root proyek dengan GEMINI_API_KEY=kunci_anda, atau atur API Key di menu Pengaturan."
         }
 
         val prompt = """
