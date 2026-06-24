@@ -1654,6 +1654,7 @@
             }
 
             loadAllDraftsFromStorage();
+            renderCustomAiOptions();
             initTypoDictionary();
             // Scale preview after initial render
             setTimeout(scalePreviewFrame, 100);
@@ -1991,6 +1992,7 @@
             document.getElementById('prof-youtube').value = d.personal.youtube || '';
             document.getElementById('prof-summary').value = d.personal.summary || '';
             document.getElementById('select-cv-template').value = d.template;
+            toggleDeleteTemplateButton();
             
             const pSet = d.personal.photoSettings || {};
             document.getElementById('prof-photo-size').value = pSet.size || '';
@@ -3028,10 +3030,12 @@ html, body {
                     try {
                         const settings = d.personal.photoSettings || {};
                         let photoHtml = '';
+                        let shape = settings.shape || 'circle';
+                        const rounded = shape === 'square' ? 'rounded-md' : shape === 'rounded' ? 'rounded-2xl' : 'rounded-full';
+                        let sizeClass = settings.size === 'small' ? 'w-16 h-16' : settings.size === 'medium' ? 'w-24 h-24' : settings.size === 'large' ? 'w-32 h-32' : settings.size === 'xlarge' ? 'w-40 h-40' : 'w-24 h-24';
+                        let justify = 'justify-start';
                         if (!settings.hidden && d.personal.photo) {
-                            let shape = settings.shape || 'circle';
-                            const rounded = shape === 'square' ? 'rounded-md' : shape === 'rounded' ? 'rounded-2xl' : 'rounded-full';
-                            photoHtml = `<img src="\${d.personal.photo}" class="w-full h-full object-cover \${rounded} border-[3px] shadow-md" style="border-color: \${accent};">`;
+                            photoHtml = `<div class="mb-4 flex \${justify}"><img src="\${d.personal.photo}" class="\${sizeClass} object-cover \${rounded} border-[3px] shadow-md" style="border-color: \${accent};"></div>`;
                         }
                         
                         window.lastGeneratedVars = {
@@ -3051,10 +3055,10 @@ html, body {
                         const wPhoto = `<!-- VAR:photoHtml -->${photoHtml}<!-- /VAR:photoHtml -->`;
 
                         const safeHtml = customTpl.html.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
-                        const func = new Function('d', 'summaryHtml', 'experiencesHtml', 'orgsHtml', 'educationsHtml', 'certsHtml', 'skillsHtml', 'languagesHtml', 'hobbiesHtml', 'contactSidebarHtml', 'photoHtml', 'accent', "return `" + safeHtml + "`;");
+                        const func = new Function('d', 'summaryHtml', 'experiencesHtml', 'orgsHtml', 'educationsHtml', 'certsHtml', 'skillsHtml', 'languagesHtml', 'hobbiesHtml', 'contactSidebarHtml', 'photoHtml', 'accent', 'rounded', 'sizeClass', 'justify', "return `" + safeHtml + "`;");
                         
                         const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = func(d, wSummary, wExperiences, wOrgs, wEducations, wCerts, wSkills, wLanguages, wHobbies, wContact, wPhoto, accent);
+                        tempDiv.innerHTML = func(d, wSummary, wExperiences, wOrgs, wEducations, wCerts, wSkills, wLanguages, wHobbies, wContact, wPhoto, accent, rounded, sizeClass, justify);
 
                         const allImgs = tempDiv.querySelectorAll('img');
                         if (allImgs.length > 0) {
@@ -3763,8 +3767,25 @@ html, body {
                                 if (aiData.cvData.skills) currentDraft.skills = aiData.cvData.skills;
                                 
                                 openEditor(currentDraft.id); 
-                                showToast('Template & Data CV berhasil diekstrak!', 'success');
                             }
+                            if (aiData.templateStyles || aiData.templateHtml) {
+                                const newId = 'custom_' + Date.now();
+                                const tHtml = aiData.templateStyles ? (aiData.templateStyles.templateHtml || "") : (aiData.templateHtml || "");
+                                const tCss = aiData.templateStyles ? (aiData.templateStyles.customCss || "") : (aiData.customCss || "");
+                                customAiTemplates.push({
+                                    id: newId,
+                                    name: "Template AI (Scan CV)",
+                                    html: tHtml,
+                                    css: tCss
+                                });
+                                saveCustomAiTemplates();
+                                renderCustomAiOptions();
+                                currentDraft.template = newId;
+                                document.getElementById('select-cv-template').value = newId;
+                                toggleDeleteTemplateButton();
+                                renderCvPreviewHtml();
+                            }
+                            showToast('Template & Data CV berhasil diekstrak!', 'success');
                         })
                         .catch(err => {
                             hideLoader();
@@ -3788,12 +3809,21 @@ html, body {
                         if (aiData.cvData.skills) currentDraft.skills = aiData.cvData.skills;
                         openEditor(currentDraft.id); 
                     }
-                    if (aiData.templateStyles) {
-                        currentDraft.template = 'custom';
-                        currentDraft.customTemplateHtml = aiData.templateStyles.templateHtml || "";
-                        currentDraft.customTemplateCss = aiData.templateStyles.customCss || "";
+                    if (aiData.templateStyles || aiData.templateHtml) {
+                        const newId = 'custom_' + Date.now();
+                        const tHtml = aiData.templateStyles ? (aiData.templateStyles.templateHtml || "") : (aiData.templateHtml || "");
+                        const tCss = aiData.templateStyles ? (aiData.templateStyles.customCss || "") : (aiData.customCss || "");
+                        customAiTemplates.push({
+                            id: newId,
+                            name: "Template AI (Scan CV)",
+                            html: tHtml,
+                            css: tCss
+                        });
+                        saveCustomAiTemplates();
                         renderCustomAiOptions();
-                        renderCV();
+                        currentDraft.template = newId;
+                        document.getElementById('select-cv-template').value = newId;
+                        renderCvPreviewHtml();
                     }
                     showToast('Template & Data CV berhasil diekstrak!', 'success');
                 } else {
@@ -3917,7 +3947,7 @@ html, body {
                         const reader = new FileReader();
                         reader.onload = (ev) => {
                             cvData.basic.photo = ev.target.result;
-                            renderForm(); renderCV(); autoSaveDraft();
+                            renderCvPreviewHtml(); autoSaveDraft();
                         };
                         reader.readAsDataURL(file);
                     }
